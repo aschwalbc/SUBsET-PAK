@@ -16,8 +16,8 @@ library(RColorBrewer) # Colour palletes
 # Load data ==========
 PAK <- as.data.table(import(here("tool","SUBsET Pakistan.xlsx"), which = "Input 1", skip = 1)) # Initial data
 PAKdb <- as.data.table(import(here("tool","SUBsET Pakistan.xlsx"), which = "Analysis")) # SUBsET outputs
-PAKshp <- st_read("PAK_SHP/PAK.shp") # District level
-PAKreg <- st_read("PAK_SHP/PAKreg.shp") # Regional level
+PAKshp <- st_read("shp/PAK.shp") # District level
+PAKreg <- st_read("shp/PAKreg.shp") # Regional level
 
 # Data summary ==========
 unique(PAK$district) # Districts = 150
