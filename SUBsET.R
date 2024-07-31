@@ -200,3 +200,39 @@ HC <- (HCinc + HCcdr) +
 tiff(here("plots", "04_hcfacilities.tiff"), width = 12, height = 8, units = 'in', res = 200)
 print(HC)
 dev.off()
+
+# Sensitivity analysis
+PAKdbSA <- as.data.table(import(here("tool","SUBsET Pakistan (SA).xlsx"), which = "Analysis")) %>% # SUBsET SA outputs
+  mutate(type = 'sens')
+
+SA <- PAKdb %>% 
+  mutate(type = 'main') %>% 
+  rbind(PAKdbSA) %>% 
+  select(district_id, region_id, pop_1k, inc_100k, inc_100k_lo, inc_100k_hi, type) %>% 
+  mutate(pop = pop_1k * 1e3) %>% 
+  mutate(inc = inc_100k * pop / 1e5) %>% 
+  pivot_wider(names_from = type, values_from = starts_with("inc")) %>% 
+  mutate(inc_lo = inc_100k_lo_main * pop / 1e5, inc_hi = inc_100k_hi_main * pop / 1e5) %>% 
+  select(district_id, region_id, pop, inc_main, inc_lo, inc_hi, inc_sens)
+
+SAfig <- ggplot(SA) +
+  geom_point(aes(x = inc_sens, y = inc_main), colour = "#0E4C92") +
+  geom_errorbar(aes(x = inc_sens, ymin = inc_lo, ymax = inc_hi), colour = "#0E4C92", linewidth = 0.2) +
+  geom_abline(intercept = 0, slope = 1, color = "#FF0000", linetype = "solid") +
+  geom_abline(intercept = 0, slope = 1.1, color = "#FF0000", linetype = "dashed") +
+  geom_abline(intercept = 0, slope = 0.9, color = "#FF0000", linetype = "dashed") +
+  scale_x_continuous(labels = scales::label_number(scale = 1e-3, suffix = 'K')) +
+  scale_y_continuous(labels = scales::label_number(scale = 1e-3, suffix = 'K')) +
+  labs(x = "TB incidence allocated by population size",
+       y = "TB incidence based on full model") +
+  coord_cartesian(xlim = c(0, 35e3), ylim = c(0, 35e3), expand = FALSE) +
+  theme_bw()
+tiff(here("plots","05_sensanalysis.tiff"), width = 8, height = 8, units = 'in', res = 200)
+print(SAfig)
+dev.off()  
+
+SAs <- SA %>% 
+  mutate(above = inc_lo > 1.1 * inc_sens,
+         below = inc_hi < 0.9 * inc_sens)
+sum(SAs$above)
+sum(SAs$below)
